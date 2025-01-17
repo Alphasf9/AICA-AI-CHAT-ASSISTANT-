@@ -17,3 +17,16 @@ export const createUser = async ({ email, password }) => {
     }
 }
 
+export const getUsers = async ({ userId }) => {
+    try {
+        if (!userId) {
+            throw new Error("User id is required")
+        }
+        const users = await User.find({
+            _id: { $ne: userId }
+        });
+        return users
+    } catch (error) {
+        console.log(`Error getting users: ${error.message}`)
+    }
+}

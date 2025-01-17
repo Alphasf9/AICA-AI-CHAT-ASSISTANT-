@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import userRoutes from './routes/user.routes.js';
+import projectRoutes from './routes/project.routes.js'
 import connect from './db/db.js';
 connect()
 
@@ -19,7 +20,8 @@ app.use(express.static('public'));
 
 app.use(cookieParser());
 
-app.use('/users',userRoutes)
+app.use('/users', userRoutes)
+app.use('/project', projectRoutes)
 
 export default app
 
