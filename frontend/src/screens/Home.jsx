@@ -5,12 +5,14 @@ import 'remixicon/fonts/remixicon.css';
 import axiosInstance from '../Config/axios';
 import { toast } from 'react-toastify';
 import '../index.css';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
     const { user } = useContext(UserContext);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [projectName, setProjectName] = useState('');
     const [project, setProject] = useState([]);
+    const navigate = useNavigate();
 
     const openModal = () => setIsModalOpen(true);
 
@@ -83,7 +85,13 @@ const Home = () => {
             <div className="mt-12 p-6 rounded-lg bg-gray-800 shadow-lg w-full max-w-3xl">
                 <h2 className="text-2xl font-bold mb-4">Your Projects</h2>
                 {project.length > 0 ? (
-                    <ul className="space-y-4">
+                    <ul className="space-y-4"
+                    onClick={()=>{
+                        navigate(`/project/`,{
+                            state:{project}
+                        })
+                    }}
+                    >
                         {project.map((proj) => (
                             <li
                                 key={proj._id}
@@ -98,7 +106,7 @@ const Home = () => {
                                         <p className="text-sm text-gray-400 mr-2">
                                             Participants: {proj.users.length}
                                         </p>
-                                        {/* Leave space for Remix Icons */}
+                                        
                                         <i className="ri-user-line text-gray-400 text-lg"></i>
                                     </div>
                                 </div>

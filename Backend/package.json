@@ -21,6 +21,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
     "morgan": "^1.10.0",
-    "remixicon": "^4.6.0"
+    "remixicon": "^4.6.0",
+    "socket.io": "^4.8.1"
   }
 }

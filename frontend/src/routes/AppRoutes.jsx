@@ -6,6 +6,7 @@ import Register from '../screens/Register';
 import Home from '../screens/Home';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Ensure toastify CSS is imported
+import Project from '../screens/Project';
 
 const AppRoutes = () => {
     return (
@@ -15,6 +16,7 @@ const AppRoutes = () => {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/project" element={<Project />} />
             </Routes>
         </Router>
     );

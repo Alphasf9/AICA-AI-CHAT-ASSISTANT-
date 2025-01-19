@@ -25,7 +25,6 @@ body {
     }
 }
 
-/* Styles for animated project borders */
 .animate-border {
     border: 2px solid transparent;
     background: linear-gradient(90deg, #1e3a8a, #3b82f6, #1e3a8a, #3b82f6);
