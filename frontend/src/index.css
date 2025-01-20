@@ -14,7 +14,6 @@ body {
     height: 100%;
 }
 
-/* Animation for message borders */
 @keyframes borderRun {
     0% {
         background-position: 0 0;
@@ -34,27 +33,25 @@ body {
 
 /* Global Styles */
 .message-box {
-    overflow-wrap: break-word; /* Prevent horizontal overflow */
-    word-wrap: break-word; /* Ensure long words break properly */
-    white-space: pre-wrap; /* Preserve spaces but allow wrapping */
-    word-break: break-word; /* Ensure long words or URLs break at reasonable points */
-    max-width: 100%; /* Ensure messages don't overflow the container */
-    padding: 8px; /* Add padding to the message box */
-    margin-bottom: 10px; /* Space between messages */
+    overflow-wrap: break-word; 
+    word-wrap: break-word; 
+    white-space: pre-wrap; 
+    word-break: break-word; 
+    max-width: 100%; 
+    padding: 8px; 
+    margin-bottom: 10px; 
 }
 
-/* Container for message list */
 .message-container {
-    overflow-y: auto; /* Enable vertical scroll if the content exceeds the box height */
-    max-height: 500px; /* Set a max height for the message box */
-    padding-right: 10px; /* Add right padding to avoid the scrollbar overlapping */
+    overflow-y: auto;
+    max-height: 500px; 
+    padding-right: 10px; 
     display: flex;
     flex-direction: column;
     gap: 10px;
-    width: 100%; /* Ensure the container takes full width of its parent */
+    width: 100%; 
 }
 
-/* Animation for new messages */
 @keyframes fadeIn {
     0% {
         opacity: 0;
@@ -70,19 +67,73 @@ body {
     animation: fadeIn 0.5s ease-out;
 }
 
-/* AI message styles */
+
 .ai-message {
-    background-color: #2d6a4f;
-    color: white;
-    border-left: 4px solid #4CAF50;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    max-width: 100%; /* Ensure it stays within container */
+    background: linear-gradient(135deg, #4c566a 0%, #2e3440 100%);
+    color: #eceff4;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    font-family: 'Roboto', sans-serif;
+    animation: fadeInUp 0.8s ease-out;
+    margin-left: auto;
+    margin-right: 20px;
     word-wrap: break-word;
-    white-space: normal; /* Allow breaking inside the message */
-    overflow-wrap: break-word; /* Ensure it wraps inside the container */
-    animation: fadeIn 0.5s ease-out;
+    overflow-wrap: break-word; 
+    word-break: break-word; 
+    white-space: normal; 
+    overflow: hidden;
+    height: auto; 
+    width: max-content;
+}
+
+/* Ensure long messages fit within the container without overflow */
+.ai-message-content {
+    font-size: 1rem;
+    line-height: 1.6;
+    white-space: normal; /* Allow wrapping of text within message container */
+    word-wrap: break-word;
+    overflow-y: auto; /* Enable scrolling if content overflows vertically */
+}
+
+/* Typing animation for the text */
+@keyframes typing {
+    0% {
+        width: 0;
+    }
+    100% {
+        width: 100%;
+    }
+}
+
+.ai-message-typing {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: 2px solid #eceff4;
+    animation: typing 2s steps(30) 1s forwards;
+    font-family: 'Courier New', monospace;
+    color: #eceff4;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+.ai-message-header {
+    font-weight: bold;
+    color: #88c0d0;
+    margin-bottom: 8px;
 }
 
 .ai-message .sender {
@@ -90,21 +141,55 @@ body {
     font-weight: bold;
 }
 
-/* User message styles */
 .user-message {
     background-color: #484848;
     color: white;
     padding: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    max-width: 100%; /* Ensure it stays within container */
+    max-width: 100%;
     word-wrap: break-word;
-    white-space: normal; /* Allow breaking inside the message */
-    overflow-wrap: break-word; /* Ensure it wraps inside the container */
+    white-space: normal; 
+    overflow-wrap: break-word; 
     animation: fadeIn 0.5s ease-out;
 }
 
 .user-message .sender {
     color: #4e9af1;
     font-weight: bold;
+}
+
+.ai-message-content {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes typing {
+    0% {
+        width: 0;
+    }
+    100% {
+        width: 100%;
+    }
+}
+
+.ai-message-typing {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: 2px solid #eceff4; 
+    animation: typing 2s steps(30) 1s forwards; 
+    font-family: 'Courier New', monospace;
+    color: #eceff4; 
 }

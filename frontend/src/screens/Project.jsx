@@ -140,11 +140,27 @@ const Project = () => {
                                 <p className="text-sm text-blue-400 mb-1">{msg.sender?.email || 'Unknown'}</p>
                                 <div className="py-2 px-3 bg-gray-600 rounded shadow-md text-sm">
                                     {/* Check if the message is from AI */}
+
                                     {msg.sender?._id === 'aica' ? (
-                                        <Markdown>{msg.message}</Markdown> // Render AI message in Markdown
+                                        <div className="ai-message">
+                                            <p className="ai-message-header">AI</p>
+                                            <div className="ai-message-content">
+                                                {/* Apply typing effect */}
+                                                <span className="ai-message-typing">
+                                                    <Markdown>{msg.message}</Markdown>
+                                                </span>
+                                            </div>
+                                        </div>
                                     ) : (
-                                        msg.message // For other users, render the message as plain text
+                                        <div className="mb-4">
+                                            <p className="text-sm text-blue-400 mb-1">{msg.sender?.email || 'Unknown'}</p>
+                                            <div className="py-2 px-3 bg-gray-600 rounded shadow-md text-sm">
+                                                {msg.message}
+                                            </div>
+                                        </div>
                                     )}
+
+
                                 </div>
                             </div>
                         ))
