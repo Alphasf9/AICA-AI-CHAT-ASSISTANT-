@@ -7,16 +7,25 @@ import Home from '../screens/Home';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Ensure toastify CSS is imported
 import Project from '../screens/Project';
+import UserAuth from '../auth/UserAuth';
 
 const AppRoutes = () => {
     return (
         <Router>
             <ToastContainer />
             <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={
+                    <UserAuth>
+                        <Home />
+                    </UserAuth>
+                } />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/project" element={<Project />} />
+                <Route path="/project" element={
+                    <UserAuth>
+                        <Project />
+                    </UserAuth>
+                } />
             </Routes>
         </Router>
     );

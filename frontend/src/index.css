@@ -14,8 +14,7 @@ body {
     height: 100%;
 }
 
-
-
+/* Animation for message borders */
 @keyframes borderRun {
     0% {
         background-position: 0 0;
@@ -33,5 +32,79 @@ body {
     border-radius: 8px;
 }
 
+/* Global Styles */
+.message-box {
+    overflow-wrap: break-word; /* Prevent horizontal overflow */
+    word-wrap: break-word; /* Ensure long words break properly */
+    white-space: pre-wrap; /* Preserve spaces but allow wrapping */
+    word-break: break-word; /* Ensure long words or URLs break at reasonable points */
+    max-width: 100%; /* Ensure messages don't overflow the container */
+    padding: 8px; /* Add padding to the message box */
+    margin-bottom: 10px; /* Space between messages */
+}
 
+/* Container for message list */
+.message-container {
+    overflow-y: auto; /* Enable vertical scroll if the content exceeds the box height */
+    max-height: 500px; /* Set a max height for the message box */
+    padding-right: 10px; /* Add right padding to avoid the scrollbar overlapping */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%; /* Ensure the container takes full width of its parent */
+}
 
+/* Animation for new messages */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-animation {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* AI message styles */
+.ai-message {
+    background-color: #2d6a4f;
+    color: white;
+    border-left: 4px solid #4CAF50;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    max-width: 100%; /* Ensure it stays within container */
+    word-wrap: break-word;
+    white-space: normal; /* Allow breaking inside the message */
+    overflow-wrap: break-word; /* Ensure it wraps inside the container */
+    animation: fadeIn 0.5s ease-out;
+}
+
+.ai-message .sender {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* User message styles */
+.user-message {
+    background-color: #484848;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    max-width: 100%; /* Ensure it stays within container */
+    word-wrap: break-word;
+    white-space: normal; /* Allow breaking inside the message */
+    overflow-wrap: break-word; /* Ensure it wraps inside the container */
+    animation: fadeIn 0.5s ease-out;
+}
+
+.user-message .sender {
+    color: #4e9af1;
+    font-weight: bold;
+}

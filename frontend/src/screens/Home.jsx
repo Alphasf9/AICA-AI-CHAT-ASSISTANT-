@@ -58,7 +58,6 @@ const Home = () => {
                         Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
                 });
-                console.log(response.data.projects);
                 setProject(response.data.projects);
             } catch (error) {
                 console.error('Error fetching projects:', error.message);

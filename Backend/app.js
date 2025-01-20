@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import userRoutes from './routes/user.routes.js';
 import projectRoutes from './routes/project.routes.js'
+import aiRoutes from './routes/ai.routes.js'
 import connect from './db/db.js';
 connect()
 
@@ -22,6 +23,7 @@ app.use(cookieParser());
 
 app.use('/users', userRoutes)
 app.use('/project', projectRoutes)
+app.use('/ai', aiRoutes)
 
 export default app
 
