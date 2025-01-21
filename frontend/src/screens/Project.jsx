@@ -9,8 +9,53 @@ import 'react-toastify/dist/ReactToastify.css';
 import { initializeSocket, receivedMessage, sendMessage } from '../Config/socket';
 import { UserContext } from '../context/user.context';
 import Markdown from 'markdown-to-jsx'
+import MonacoEditor from 'react-monaco-editor';
+
+
 
 const Project = () => {
+
+    const editorOptions = {
+        selectOnLineNumbers: true,
+        readOnly: false,
+        theme: 'Visual Studio Dark',
+        fontSize: 14,
+        lineHeight: 24,
+        wordWrap: 'on',
+        wrappingIndent: 'same',
+        autoIndent: 'full',
+        minimap: {
+            enabled: true,
+            renderCharacters: false,
+        },
+        renderLineHighlight: 'line',
+        cursorStyle: 'block',
+        fontFamily: 'Fira Code, monospace',
+        fontWeight: 'normal',
+        scrollbar: {
+            vertical: 'auto',
+            horizontal: 'auto',
+        },
+        codeLens: true,
+        contextmenu: true,
+        folding: true,
+        formatOnType: true,
+        formatOnPaste: true,
+        dragAndDrop: true,
+        renderWhitespace: 'all',
+        quickSuggestions: true,
+        autoClosingBrackets: true,
+        autoClosingQuotes: true,
+        autoSurround: 'languageDefined',
+        hover: {
+            enabled: true,
+        },
+        suggestOnTriggerCharacters: true,
+        inlineSuggest: true,
+    };
+
+
+
     const { user } = useContext(UserContext);
     const location = useLocation();
 
@@ -22,6 +67,10 @@ const Project = () => {
     const [userList, setUserList] = useState([]);
     const [project, setProject] = useState(location.state?.project[0] || {});
     const messageBoxRef = useRef(null);
+    const [fileTree, setFileTree] = useState({});
+
+    const [currentFile, setCurrentFile] = useState(null)
+    const [openFile, setOpenFile] = useState([]);
 
     useEffect(() => {
         const projectId = project?._id;
@@ -30,10 +79,21 @@ const Project = () => {
             initializeSocket(projectId);
 
             const messageListener = (data) => {
+                const cleanMessage = data.message.trim();
+                const message = JSON.parse(cleanMessage);
+                console.log(message);
+                if (message.fileTree) {
+                    setFileTree(message.fileTree)
+                }
+                else {
+                    console.log("Unable to find file Tree in your response", data.message)
+                }
+
                 setMessages((prev) => [...prev, data]);
             };
 
             receivedMessage('project-message', messageListener);
+
 
             return () => {
                 receivedMessage('project-message', null);
@@ -53,6 +113,7 @@ const Project = () => {
                 console.error('Error fetching project details:', error);
             }
         };
+
 
         const fetchUsers = async () => {
             try {
@@ -106,6 +167,9 @@ const Project = () => {
             messageBoxRef.current.scrollTop = messageBoxRef.current.scrollHeight;
         }
     }, [messages]);
+
+
+
 
     return (
         <main className="h-screen w-screen flex bg-gray-900 text-white">
@@ -186,8 +250,67 @@ const Project = () => {
                     </button>
                 </div>
             </section>
+            {/* Tree Structure */}
+
+
+            <section className="right bg-red-50 flex-grow flex">
+                {/* File Explorer */}
+                <div className="explorer w-1/4 bg-gray-100 border-r border-gray-300 p-4">
+                    <div className="file-tree w-full">
+                        {Object.keys(fileTree).map((file, index) => (
+                            <button
+                                onClick={() => {
+                                    if (!openFile.includes(file)) {
+                                        setOpenFile((prevFiles) => [...prevFiles, file]);
+                                    }
+                                    setCurrentFile(file); // Set this file as the current active file
+                                }}
+                                key={index}
+                                className="tree-element cursor-pointer p-2 px-4 w-full text-left hover:bg-gray-200"
+                            >
+                                <p className="font-semibold text-lg text-gray-700">{file}</p>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Code Editor */}
+                <div className="code-editor flex-grow p-4">
+                    {/* Check if file exists and render Monaco Editor */}
+                    {fileTree[currentFile] && fileTree[currentFile].file ? (
+                        <MonacoEditor
+                            width="100%" 
+                            height="600" 
+                            language="javascript" 
+                            theme="vs" 
+                            value={fileTree[currentFile].file.contents || ''} // Initial content for the editor
+                            options={editorOptions}
+                            onChange={(newValue) => {
+                                setFileTree((prevTree) => ({
+                                    ...prevTree,
+                                    [currentFile]: {
+                                        ...prevTree[currentFile],
+                                        file: {
+                                            ...prevTree[currentFile].file,
+                                            contents: newValue, // Update the file contents
+                                        },
+                                    },
+                                }));
+                            }}
+                        />
+                    ) : (
+                        <div>Nothing to showcase</div> // Fallback if no file is available
+                    )}
+                </div>
+            </section>
+
+
+
+
+
 
             {/* Right Panel */}
+
             <section className="flex-grow bg-gray-900 p-6 overflow-y-auto">
                 <header className="mb-6">
                     <h1 className="text-3xl font-bold">Project Details</h1>
@@ -242,13 +365,22 @@ const Project = () => {
                     </div>
                 ) : (
                     <div>
-                        <p>This is the main content area. Display project details or additional features here.</p>
+                        {/* <p>This is the main content area. Display project details or additional features here.</p>
                         <pre className="mt-4 bg-gray-800 p-4 rounded text-sm">
-                            {JSON.stringify(project, null, 2)}
-                        </pre>
+                            <div className="mt-4 flex items-center gap-x-2">
+                                <span className="font-bold">Name of the project:</span>
+                                <span>{project?.name}</span>
+                            </div>
+                            <div className="mt-2 flex items-center gap-x-2">
+                                <span className="font-bold">Emails:</span>
+                                <span>{project?.users?.map(u => u.email).join(', ') || ''}</span>
+
+                            </div>
+                        </pre> */}
                     </div>
                 )}
             </section>
+
         </main>
     );
 };

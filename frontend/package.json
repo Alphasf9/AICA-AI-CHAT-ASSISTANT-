@@ -10,10 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@webcontainer/api": "^1.5.1-internal.6",
     "axios": "^1.7.9",
     "markdown-to-jsx": "^7.7.3",
+    "monaco-editor": "^0.52.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-monaco-editor": "^0.56.2",
     "react-router-dom": "^7.1.2",
     "react-toastify": "^11.0.3",
     "remixicon": "^4.6.0",

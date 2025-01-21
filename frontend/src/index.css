@@ -69,7 +69,7 @@ body {
 
 
 .ai-message {
-    background: linear-gradient(135deg, #4c566a 0%, #2e3440 100%);
+    background: linear-gradient(135deg, #000000 0%, #2e3440 100%);
     color: #eceff4;
     padding: 12px 20px;
     border-radius: 12px;
@@ -193,3 +193,32 @@ body {
     font-family: 'Courier New', monospace;
     color: #eceff4; 
 }
+
+/* Basic Styling */
+.code-editor {
+    font-family: 'Courier New', Courier, monospace;
+    color: #f8f8f2;  /* Default code color */
+    background-color: #2e2e2e;  /* Dark background for code */
+    border: 1px solid #444;  /* Border for the editor */
+    padding: 16px;
+    border-radius: 8px;
+    resize: none;
+    box-sizing: border-box;
+}
+
+/* Syntax highlighting for comments */
+.code-editor::selection {
+    background-color: #505050;  /* Highlight selection */
+}
+
+.code-editor .comment {
+    color: #757575;  /* Lighter color for comments */
+}
+
+/* Highlighting the active line of code */
+.code-editor .active-line {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Add custom styles to comments or other parts if required */
+
