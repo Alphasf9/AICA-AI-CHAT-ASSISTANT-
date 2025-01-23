@@ -37,7 +37,7 @@ const model = genAI.getGenerativeModel({
                 "
             
         },
-    },
+     },
 
         "package.json": {
             file: {
@@ -68,16 +68,17 @@ const model = genAI.getGenerativeModel({
 
         },
 
-    },
-    "buildCommand": {
+     }
+    }
+     ,
+     "buildCommand": {
         mainItem: "npm",
             commands: [ "install" ]
-    },
+     },
 
-    "startCommand": {
+     "startCommand": {
         mainItem: "node",
             commands: [ "app.js" ]
-    }
 }
 
     user:Create an express application 

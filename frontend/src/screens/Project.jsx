@@ -10,6 +10,7 @@ import { initializeSocket, receivedMessage, sendMessage } from '../Config/socket
 import { UserContext } from '../context/user.context';
 import Markdown from 'markdown-to-jsx'
 import MonacoEditor from 'react-monaco-editor';
+import { getWebContainer } from '../Config/webcontainer';
 
 
 
@@ -71,35 +72,71 @@ const Project = () => {
 
     const [currentFile, setCurrentFile] = useState(null)
     const [openFile, setOpenFile] = useState([]);
+    const [webContainer, setWebContainer] = useState(null)
+    const [iFrameUrl, setIFrameUrl] = useState(null)
+
+
+    
 
     useEffect(() => {
         const projectId = project?._id;
 
         if (projectId) {
+            const initializeWebContainer = async () => {
+                if (!webContainer) {
+                    const container = await getWebContainer();
+                    setWebContainer(container);
+                    console.log("WebContainer started");
+                    return container;
+                }
+                return webContainer;
+            };
+
+            // Step 2: Initialize the socket connection
             initializeSocket(projectId);
 
-            const messageListener = (data) => {
+            // Step 3: Message listener
+            const messageListener = async (data) => {
                 const cleanMessage = data.message.trim();
                 const message = JSON.parse(cleanMessage);
-                console.log(message);
+                console.log("Received message:", message);
+
                 if (message.fileTree) {
-                    setFileTree(message.fileTree)
-                }
-                else {
-                    console.log("Unable to find file Tree in your response", data.message)
+                    console.log("Found fileTree:", message.fileTree);
+
+                    // Wait for WebContainer to initialize
+                    const container = await initializeWebContainer();
+
+                    if (container) {
+                        console.log("WebContainer is ready, mounting file tree");
+                        try {
+                            await container.mount(message.fileTree);
+                            setFileTree(message.fileTree);
+                        } catch (error) {
+                            console.error("Failed to mount file tree:", error);
+                        }
+                    } else {
+                        console.log("WebContainer is still not ready.");
+                    }
+                } else {
+                    console.log("No fileTree found or WebContainer is not ready.");
                 }
 
                 setMessages((prev) => [...prev, data]);
             };
 
+            // Step 4: Attach the listener
             receivedMessage('project-message', messageListener);
 
-
+            // Cleanup on component unmount
             return () => {
                 receivedMessage('project-message', null);
             };
         }
-    }, [project?._id, initializeSocket, receivedMessage]);
+    }, [project?._id, initializeSocket, webContainer]);
+
+
+
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
@@ -108,6 +145,7 @@ const Project = () => {
                     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
                 });
                 setProject(response.data.project);
+                setFileTree(response.data.project.fileTree);
                 setContributors(response.data.project.users || []);
             } catch (error) {
                 console.error('Error fetching project details:', error);
@@ -167,6 +205,89 @@ const Project = () => {
             messageBoxRef.current.scrollTop = messageBoxRef.current.scrollHeight;
         }
     }, [messages]);
+
+    let currentRunProcess = null;
+
+    const handleRunCode = async () => {
+        try {
+            // Save the editor content to the fileTree immediately
+            if (currentFile && fileTree[currentFile]?.file?.contents) {
+                console.log("Saving editor content to fileTree...");
+                await setFileTree((prevTree) => ({
+                    ...prevTree,
+                    [currentFile]: {
+                        ...prevTree[currentFile],
+                        file: {
+                            ...prevTree[currentFile].file,
+                            contents: editorOptions, // Ensure this is the actual editor content
+                        },
+                    },
+                }));
+            }
+
+            // If there's an ongoing run process, terminate it
+            if (currentRunProcess) {
+                console.log("Stopping the previous process...");
+                await currentRunProcess.kill();
+                currentRunProcess = null; // Reset the process tracker
+                setIFrameUrl(""); // Clear iframe URL
+            }
+
+            // Mount the updated file system to the container with the latest code
+            console.log("Mounting updated file system...");
+            await webContainer.mount(fileTree);
+
+            // Install dependencies (if needed)
+            const installProcess = await webContainer.spawn("npm", ["install"]);
+            installProcess.output.pipeTo(
+                new WritableStream({
+                    write(chunk) {
+                        console.log("[Install Output]", chunk);
+                    },
+                })
+            );
+
+            // Start the new process
+            console.log("Starting the new process...");
+            currentRunProcess = await webContainer.spawn("npm", ["start"]);
+            currentRunProcess.output.pipeTo(
+                new WritableStream({
+                    write(chunk) {
+                        console.log("[Server Output]", chunk);
+                    },
+                })
+            );
+
+            // Update iframe URL when the server is ready
+            webContainer.on("server-ready", (port, url) => {
+                console.log(`Server running at ${url}`);
+                setIFrameUrl(url); // Update iframe URL with the new address
+            });
+        } catch (error) {
+            console.error("Error running code:", error);
+        }
+    };
+
+
+
+    async function saveFileTree(ft) {
+        try {
+            const response = await axiosInstance.put(
+                '/project/update-file-tree',
+                {
+                    projectId: project._id,
+                    fileTree: ft,
+                },
+                {
+                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                }
+            );
+            
+        } catch (error) {
+            console.error('Error saving file tree:', error);
+        }
+    }
+
 
 
 
@@ -253,53 +374,141 @@ const Project = () => {
             {/* Tree Structure */}
 
 
-            <section className="right bg-red-50 flex-grow flex">
+            <section className="right bg-red-50 flex-grow flex overflow-hidden">
                 {/* File Explorer */}
-                <div className="explorer w-1/4 bg-gray-100 border-r border-gray-300 p-4">
-                    <div className="file-tree w-full">
-                        {Object.keys(fileTree).map((file, index) => (
+                <div className="explorer w-1/4 bg-gray-100 border-r border-gray-300 p-4 overflow-y-auto">
+                    <div className="files flex flex-col">
+                        <div className="file-tree w-full">
+                            {Object.keys(fileTree).map((file, index) => (
+                                <button
+                                    onClick={() => {
+                                        if (!openFile.includes(file)) {
+                                            setOpenFile((prevFiles) => [...prevFiles, file]);
+                                        }
+                                        setCurrentFile(file); // Set this file as the current active file
+                                    }}
+                                    key={index}
+                                    className="tree-element cursor-pointer p-2 px-4 w-full text-left hover:bg-gray-200 rounded"
+                                >
+                                    <p className="font-semibold text-lg text-gray-700">{file}</p>
+                                </button>
+                            ))}
+                        </div>
+                        <div className="action mt-4">
                             <button
-                                onClick={() => {
-                                    if (!openFile.includes(file)) {
-                                        setOpenFile((prevFiles) => [...prevFiles, file]);
-                                    }
-                                    setCurrentFile(file); // Set this file as the current active file
+                                onClick={async () => {
+                                    alert("Please increase the number by one every time you update the code");
+                                    await webContainer.mount(fileTree);
+                                    const installProcess = await webContainer?.spawn("npm", ["install"]);
+                                    installProcess.output.pipeTo(new WritableStream({
+                                        write(chunk) {
+                                            
+                                        }
+                                    }));
+                                    const runProcess = await webContainer?.spawn("npm", ["start"]);
+                                    runProcess.output.pipeTo(new WritableStream({
+                                        write(chunk) {
+                                           
+                                        }
+                                    }));
+
+                                    webContainer.on('server-ready', (port, url) => {
+                                        console.log(port, url);
+                                        setIFrameUrl(url);
+                                    });
                                 }}
-                                key={index}
-                                className="tree-element cursor-pointer p-2 px-4 w-full text-left hover:bg-gray-200"
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition w-full"
                             >
-                                <p className="font-semibold text-lg text-gray-700">{file}</p>
+                                Run
                             </button>
-                        ))}
+                        </div>
                     </div>
                 </div>
 
+
                 {/* Code Editor */}
-                <div className="code-editor flex-grow p-4">
-                    {/* Check if file exists and render Monaco Editor */}
+                <div className="code-editor-container flex-grow overflow-auto p-4 bg-gray-800">
                     {fileTree[currentFile] && fileTree[currentFile].file ? (
                         <MonacoEditor
-                            width="100%" 
-                            height="600" 
-                            language="javascript" 
-                            theme="vs" 
-                            value={fileTree[currentFile].file.contents || ''} // Initial content for the editor
-                            options={editorOptions}
+                            width="100%"
+                            height="600"
+                            language="javascript"
+                            theme="vs-dark"
+                            value={fileTree[currentFile]?.file?.contents || ""}
                             onChange={(newValue) => {
-                                setFileTree((prevTree) => ({
-                                    ...prevTree,
+                                const updatedFileTree = {
+                                    ...fileTree,
                                     [currentFile]: {
-                                        ...prevTree[currentFile],
+                                        ...fileTree[currentFile],
                                         file: {
-                                            ...prevTree[currentFile].file,
-                                            contents: newValue, // Update the file contents
+                                            ...fileTree[currentFile].file,
+                                            contents: newValue, // Update the fileTree with editor content
                                         },
                                     },
-                                }));
+                                };
+                                setFileTree(updatedFileTree);
+
+                                // Save the updated fileTree to the database
+                                saveFileTree(updatedFileTree);
+                            }}
+                            options={{
+                                fontSize: 14,
+                                scrollBeyondLastLine: false,
+                                minimap: { enabled: false },
+                                automaticLayout: true,
                             }}
                         />
                     ) : (
-                        <div>Nothing to showcase</div> // Fallback if no file is available
+                        <div className="text-white text-center">Nothing to showcase</div>
+                    )}
+                </div>
+
+
+                {/* Iframe Section */}
+                <div className="iframe-container w-1/3 bg-white flex flex-col border-l border-gray-300">
+                    <div className="address-bar flex items-center p-2 bg-gray-100 border-b border-gray-300">
+                        <input
+                            type="text"
+                            value={iFrameUrl}
+                            onChange={(e) => setIFrameUrl(e.target.value)} // Update iFrameUrl as the user types
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    console.log("Updating iframe URL to:", iFrameUrl);
+                                    setIFrameUrl(e.target.value); // Set the iframe URL when the user presses Enter
+                                }
+                            }}
+                            className="w-full p-2 bg-gray-200 text-gray-800 border border-gray-400 rounded"
+                            title="Server URL"
+                        />
+                        <button
+                            onClick={async () => {
+                                try {
+                                    if (currentRunProcess) {
+                                        console.log("Stopping the current process...");
+                                        await currentRunProcess.kill(); // Kill the running process
+                                        currentRunProcess = null;
+                                    }
+                                    setIFrameUrl(""); // Clear the iframe URL
+                                    console.log("Stopped successfully. Ready for updates.");
+                                } catch (error) {
+                                    console.error("Error stopping the process:", error);
+                                }
+                            }}
+                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition ml-4"
+                        >
+                            Stop
+                        </button>
+                    </div>
+                    {iFrameUrl ? (
+                        <iframe
+                            src={iFrameUrl}
+                            className="w-full h-full border-0 overflow-auto rounded shadow-md"
+                            title="App Preview"
+                        ></iframe>
+                    ) : (
+                        <div className="flex justify-center items-center h-full bg-gray-100 text-gray-500">
+                            <p>Server not available. Please start the server again.</p>
+                        </div>
                     )}
                 </div>
             </section>
@@ -309,77 +518,10 @@ const Project = () => {
 
 
 
+
             {/* Right Panel */}
 
-            <section className="flex-grow bg-gray-900 p-6 overflow-y-auto">
-                <header className="mb-6">
-                    <h1 className="text-3xl font-bold">Project Details</h1>
-                </header>
 
-                {showUserSelection ? (
-                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4">Select a Contributor</h2>
-                        {userList.length > 0 ? (
-                            <ul className="space-y-2">
-                                {userList.map((user) => (
-                                    <li
-                                        key={user._id}
-                                        className={`py-2 px-4 rounded shadow-md cursor-pointer transition ${contributors.some((u) => u.email === user.email) ? 'bg-green-600' : 'bg-gray-700 hover:bg-gray-600'
-                                            }`}
-                                        onClick={() => handleUserSelection(user._id, user.email)}
-                                    >
-                                        {user.email}
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-gray-400">No users found.</p>
-                        )}
-                        <button
-                            onClick={() => setShowUserSelection(false)}
-                            className="mt-4 px-4 py-2 bg-blue-500 rounded hover:bg-blue-600 transition"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                ) : showContributors ? (
-                    <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4">Contributors</h2>
-                        {contributors.length > 0 ? (
-                            <ul className="space-y-2">
-                                {contributors.map((user) => (
-                                    <li key={user._id} className="py-2 px-4 rounded shadow-md bg-gray-700">
-                                        {user.email}
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-gray-400">No contributors found for this project.</p>
-                        )}
-                        <button
-                            onClick={() => setShowContributors(false)}
-                            className="mt-4 px-4 py-2 bg-blue-500 rounded hover:bg-blue-600 transition"
-                        >
-                            Back to Project
-                        </button>
-                    </div>
-                ) : (
-                    <div>
-                        {/* <p>This is the main content area. Display project details or additional features here.</p>
-                        <pre className="mt-4 bg-gray-800 p-4 rounded text-sm">
-                            <div className="mt-4 flex items-center gap-x-2">
-                                <span className="font-bold">Name of the project:</span>
-                                <span>{project?.name}</span>
-                            </div>
-                            <div className="mt-2 flex items-center gap-x-2">
-                                <span className="font-bold">Emails:</span>
-                                <span>{project?.users?.map(u => u.email).join(', ') || ''}</span>
-
-                            </div>
-                        </pre> */}
-                    </div>
-                )}
-            </section>
 
         </main>
     );

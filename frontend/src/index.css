@@ -31,7 +31,6 @@ body {
     border-radius: 8px;
 }
 
-/* Global Styles */
 .message-box {
     overflow-wrap: break-word; 
     word-wrap: break-word; 
@@ -89,16 +88,15 @@ body {
     width: max-content;
 }
 
-/* Ensure long messages fit within the container without overflow */
 .ai-message-content {
     font-size: 1rem;
     line-height: 1.6;
-    white-space: normal; /* Allow wrapping of text within message container */
+    white-space: normal; 
     word-wrap: break-word;
-    overflow-y: auto; /* Enable scrolling if content overflows vertically */
+    overflow-y: auto; 
 }
 
-/* Typing animation for the text */
+
 @keyframes typing {
     0% {
         width: 0;
@@ -194,31 +192,31 @@ body {
     color: #eceff4; 
 }
 
-/* Basic Styling */
+
 .code-editor {
     font-family: 'Courier New', Courier, monospace;
-    color: #f8f8f2;  /* Default code color */
-    background-color: #2e2e2e;  /* Dark background for code */
-    border: 1px solid #444;  /* Border for the editor */
+    color: #f8f8f2;  
+    background-color: #2e2e2e;  
+    border: 1px solid #444;
     padding: 16px;
     border-radius: 8px;
     resize: none;
     box-sizing: border-box;
 }
 
-/* Syntax highlighting for comments */
+
 .code-editor::selection {
-    background-color: #505050;  /* Highlight selection */
+    background-color: #505050;  
 }
 
 .code-editor .comment {
-    color: #757575;  /* Lighter color for comments */
+    color: #757575;  
 }
 
-/* Highlighting the active line of code */
+
 .code-editor .active-line {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Add custom styles to comments or other parts if required */
+
 
